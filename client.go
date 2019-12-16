@@ -7,6 +7,7 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
+// Error definitions
 var (
 	ErrKeyNotFound      = errors.New("key not found")
 	ErrVersionNotFound  = errors.New("version not found")
@@ -44,20 +45,6 @@ func CreateVaultClientTLS(token, vaultAddress string, retries int, cacert, cert,
 	return &VaultClient{client}, nil
 }
 
-// Healthcheck determines the state of vault
-func (c *VaultClient) Healthcheck() (string, error) {
-	resp, err := c.client.Sys().Health()
-	if err != nil {
-		return "vault", err
-	}
-
-	if !resp.Initialized {
-		return "vault", errors.New("vault not initialised")
-	}
-
-	return "", nil
-}
-
 // Read reads a secret from vault. If the token does not have the correct policy this returns an error;
 // if the vault server is not reachable, return all the information stored about the secret.
 func (c *VaultClient) Read(path string) (map[string]interface{}, error) {
@@ -80,7 +67,7 @@ func (c *VaultClient) ReadKey(path, key string) (string, error) {
 	}
 	val, ok := data[key]
 	if !ok {
-		return "", errors.New("key not found")
+		return "", ErrKeyNotFound
 	}
 	return val.(string), nil
 }
@@ -92,6 +79,7 @@ func (c *VaultClient) Write(path string, data map[string]interface{}) error {
 	return err
 }
 
+// WriteKey writes a secret value for a specific key to vault.
 func (c *VaultClient) WriteKey(path, key, value string) error {
 	data := make(map[string]interface{})
 	data[key] = value
@@ -141,6 +129,7 @@ func (c *VaultClient) VReadKey(path, key string) (string, int64, error) {
 	return val.(string), ver, nil
 }
 
+// VWriteKey - create a data map, with a data field containing the key-value, and write it to vault
 func (c *VaultClient) VWriteKey(path, key, value string) error {
 	data := map[string]interface{}{
 		"data": map[string]interface{}{
