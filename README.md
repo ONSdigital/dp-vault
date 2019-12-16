@@ -1,2 +1,4 @@
-# dp-vault
+dp-vault
+================
+
 A vault library for Go.
