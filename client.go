@@ -16,43 +16,43 @@ var (
 	ErrVersionInvalid   = errors.New("version failed to convert to number")
 )
 
-// VaultClient Used to read and write secrets from vault using a vault API client wrapper.
-type VaultClient struct {
+// Client Used to read and write secrets from vault using a vault API client wrapper.
+type Client struct {
 	client APIClient
 }
 
-// CreateVaultClient by providing an auth token, vault address and the maximum number of retries for a request
-func CreateVaultClient(token, vaultAddress string, retries int) (*VaultClient, error) {
+// CreateClient by providing an auth token, vault address and the maximum number of retries for a request
+func CreateClient(token, vaultAddress string, retries int) (*Client, error) {
 	config := vaultapi.Config{Address: vaultAddress, MaxRetries: retries}
-	return CreateVaultClientWithConfig(&config, token)
+	return CreateClientWithConfig(&config, token)
 }
 
-// CreateVaultClientTLS is like the CreateVaultClient function but wraps the HTTP client with TLS
-func CreateVaultClientTLS(token, vaultAddress string, retries int, cacert, cert, key string) (*VaultClient, error) {
+// CreateClientTLS is like the CreateClient function but wraps the HTTP client with TLS
+func CreateClientTLS(token, vaultAddress string, retries int, cacert, cert, key string) (*Client, error) {
 	config := vaultapi.Config{Address: vaultAddress, MaxRetries: retries}
 	config.ConfigureTLS(&vaultapi.TLSConfig{CACert: cacert, ClientCert: cert, ClientKey: key})
-	return CreateVaultClientWithConfig(&config, token)
+	return CreateClientWithConfig(&config, token)
 }
 
-// CreateVaultClientWithConfig creates a VaultClient with provided config and token as inputs
-func CreateVaultClientWithConfig(config *vaultapi.Config, token string) (*VaultClient, error) {
+// CreateClientWithConfig creates a Client with provided config and token as inputs
+func CreateClientWithConfig(config *vaultapi.Config, token string) (*Client, error) {
 	client, err := vaultapi.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
-	client.SetToken(token)
 	apiClient := &APIClientImpl{client}
-	return CreateVaultClientWithAPIClient(apiClient), nil
+	apiClient.SetToken(token)
+	return CreateClientWithAPIClient(apiClient), nil
 }
 
-// CreateVaultClientWithAPIClient creates a VaultClient with a provided Vault API client as input
-func CreateVaultClientWithAPIClient(apiClient APIClient) *VaultClient {
-	return &VaultClient{apiClient}
+// CreateClientWithAPIClient creates a Client with a provided Vault API client as input
+func CreateClientWithAPIClient(apiClient APIClient) *Client {
+	return &Client{apiClient}
 }
 
 // Read reads a secret from vault. If the token does not have the correct policy this returns an error;
 // if the vault server is not reachable, return all the information stored about the secret.
-func (c *VaultClient) Read(path string) (map[string]interface{}, error) {
+func (c *Client) Read(path string) (map[string]interface{}, error) {
 	secret, err := c.client.Read(path)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (c *VaultClient) Read(path string) (map[string]interface{}, error) {
 }
 
 // ReadKey from vault. Like read but only return a single value from the secret
-func (c *VaultClient) ReadKey(path, key string) (string, error) {
+func (c *Client) ReadKey(path, key string) (string, error) {
 	data, err := c.Read(path)
 	if err != nil {
 		return "", err
@@ -79,13 +79,13 @@ func (c *VaultClient) ReadKey(path, key string) (string, error) {
 
 // Write writes a secret to vault. Returns an error if the token does not have the correct policy or the
 // vault server is not reachable. Returns nil when the operation was successful.
-func (c *VaultClient) Write(path string, data map[string]interface{}) error {
+func (c *Client) Write(path string, data map[string]interface{}) error {
 	_, err := c.client.Write(path, data)
 	return err
 }
 
 // WriteKey writes a secret value for a specific key to vault.
-func (c *VaultClient) WriteKey(path, key, value string) error {
+func (c *Client) WriteKey(path, key, value string) error {
 	data := make(map[string]interface{})
 	data[key] = value
 	return c.Write(path, data)
@@ -93,7 +93,7 @@ func (c *VaultClient) WriteKey(path, key, value string) error {
 
 // VRead reads a versioned secret from vault - cf Read, above -
 // returns the secret (map) and the version
-func (c *VaultClient) VRead(path string) (map[string]interface{}, int64, error) {
+func (c *Client) VRead(path string) (map[string]interface{}, int64, error) {
 	secret, err := c.Read(path)
 	if err != nil {
 		return nil, -1, err
@@ -122,7 +122,7 @@ func (c *VaultClient) VRead(path string) (map[string]interface{}, int64, error) 
 }
 
 // VReadKey - cf Read but for versioned secret - return the value of the key and the version
-func (c *VaultClient) VReadKey(path, key string) (string, int64, error) {
+func (c *Client) VReadKey(path, key string) (string, int64, error) {
 	data, ver, err := c.VRead(path)
 	if err != nil {
 		return "", -1, err
@@ -135,7 +135,7 @@ func (c *VaultClient) VReadKey(path, key string) (string, int64, error) {
 }
 
 // VWriteKey - create a data map, with a data field containing the key-value, and write it to vault
-func (c *VaultClient) VWriteKey(path, key, value string) error {
+func (c *Client) VWriteKey(path, key, value string) error {
 	data := map[string]interface{}{
 		"data": map[string]interface{}{
 			key: value,

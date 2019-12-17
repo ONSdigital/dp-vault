@@ -27,7 +27,7 @@ var (
 var minTime = time.Unix(0, 0)
 
 // Healthcheck determines the state of vault
-func (c *VaultClient) Healthcheck() (string, error) {
+func (c *Client) Healthcheck() (string, error) {
 	resp, err := c.client.Health()
 	if err != nil {
 		return "vault", err
@@ -41,7 +41,7 @@ func (c *VaultClient) Healthcheck() (string, error) {
 }
 
 // Checker : Check health of Vault and return it inside a Check structure
-func (c *VaultClient) Checker(ctx *context.Context) (*health.Check, error) {
+func (c *Client) Checker(ctx *context.Context) (*health.Check, error) {
 	_, err := c.Healthcheck()
 	if err != nil {
 		return getCheck(ctx, 500), err

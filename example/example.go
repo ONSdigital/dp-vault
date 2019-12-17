@@ -13,7 +13,7 @@ func main() {
 	devAddress := os.Getenv("VAULT_ADDR")
 	token := os.Getenv("VAULT_TOKEN")
 
-	client, err := vault.CreateVaultClient(token, devAddress, 3)
+	client, err := vault.CreateClient(token, devAddress, 3)
 
 	// In production no tokens should be logged
 	logData := log.Data{"address": devAddress, "token": token}

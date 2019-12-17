@@ -28,7 +28,7 @@ func main() {
 		"val":     val,
 	}
 
-	client, err := vault.CreateVaultClient(token, devAddress, 3)
+	client, err := vault.CreateClient(token, devAddress, 3)
 	if err != nil {
 		log.Event(nil, "failed to connect to vault", logData, log.Error(err))
 		os.Exit(1)

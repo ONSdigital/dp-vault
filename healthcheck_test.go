@@ -16,19 +16,6 @@ var respNotInitialised = &vaultapi.HealthResponse{
 	Initialized: false,
 }
 
-// 	Initialized                bool   `json:"initialized"`
-// 	Sealed                     bool   `json:"sealed"`
-// 	Standby                    bool   `json:"standby"`
-// 	PerformanceStandby         bool   `json:"performance_standby"`
-// 	ReplicationPerformanceMode string `json:"replication_performance_mode"`
-// 	ReplicationDRMode          string `json:"replication_dr_mode"`
-// 	ServerTimeUTC              int64  `json:"server_time_utc"`
-// 	Version                    string `json:"version"`
-// 	ClusterName                string `json:"cluster_name,omitempty"`
-// 	ClusterID                  string `json:"cluster_id,omitempty"`
-// 	LastWAL                    uint64 `json:"last_wal,omitempty"`
-// }
-
 var healthSuccess = func() (*vaultapi.HealthResponse, error) {
 	return &vaultapi.HealthResponse{
 		Initialized: true,
@@ -45,32 +32,13 @@ var healthError = func() (*vaultapi.HealthResponse, error) {
 	return nil, fmt.Errorf("nil request created")
 }
 
-// var doOkMissingStatus = func(ctx context.Context, request *http.Request) (*http.Response, error) {
-// 	return resp(clusterMissingStatus, 200), nil
-// }
-
-// var doUnexpectedCode = func(ctx context.Context, request *http.Request) (*http.Response, error) {
-// 	return resp(clusterHealthy, 300), nil
-// }
-
-// var doUnreacheable = func(ctx context.Context, request *http.Request) (*http.Response, error) {
-// 	return nil, errors.New("unreacheable")
-// }
-
-// func resp(body string, code int) *http.Response {
-// 	return &http.Response{
-// 		Body:       ioutil.NopCloser(bytes.NewBufferString(body)),
-// 		StatusCode: code,
-// 	}
-// }
-
 func TestVaultHealthy(t *testing.T) {
 	Convey("Given that Vault is healthy", t, func() {
 
 		var apiCli = &mock.APIClientMock{
 			HealthFunc: healthSuccess,
 		}
-		cli := vault.CreateVaultClientWithAPIClient(apiCli)
+		cli := vault.CreateClientWithAPIClient(apiCli)
 
 		Convey("Checker returns a successful Check struct", func() {
 			validateSuccessfulCheck(cli)
@@ -85,7 +53,7 @@ func TestVaultNotInitialised(t *testing.T) {
 		var apiCli = &mock.APIClientMock{
 			HealthFunc: healthNotInitialised,
 		}
-		cli := vault.CreateVaultClientWithAPIClient(apiCli)
+		cli := vault.CreateClientWithAPIClient(apiCli)
 
 		Convey("Checker returns a Critical Check struct", func() {
 			_, err := validateCriticalCheck(cli)
@@ -101,7 +69,7 @@ func TestVaultAPIError(t *testing.T) {
 		var apiCli = &mock.APIClientMock{
 			HealthFunc: healthError,
 		}
-		cli := vault.CreateVaultClientWithAPIClient(apiCli)
+		cli := vault.CreateClientWithAPIClient(apiCli)
 
 		Convey("Checker returns a Critical Check struct", func() {
 			_, err := validateCriticalCheck(cli)
@@ -111,7 +79,7 @@ func TestVaultAPIError(t *testing.T) {
 	})
 }
 
-func validateSuccessfulCheck(cli *vault.VaultClient) (check *health.Check) {
+func validateSuccessfulCheck(cli *vault.Client) (check *health.Check) {
 	t0 := time.Now().UTC()
 	check, err := cli.Checker(nil)
 	t1 := time.Now().UTC()
@@ -126,7 +94,7 @@ func validateSuccessfulCheck(cli *vault.VaultClient) (check *health.Check) {
 	return check
 }
 
-func validateWarningCheck(cli *vault.VaultClient) (check *health.Check, err error) {
+func validateWarningCheck(cli *vault.Client) (check *health.Check, err error) {
 	t0 := time.Now().UTC()
 	check, err = cli.Checker(nil)
 	t1 := time.Now().UTC()
@@ -140,7 +108,7 @@ func validateWarningCheck(cli *vault.VaultClient) (check *health.Check, err erro
 	return check, err
 }
 
-func validateCriticalCheck(cli *vault.VaultClient) (check *health.Check, err error) {
+func validateCriticalCheck(cli *vault.Client) (check *health.Check, err error) {
 	t0 := time.Now().UTC()
 	check, err = cli.Checker(nil)
 	t1 := time.Now().UTC()
