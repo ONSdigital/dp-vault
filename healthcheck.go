@@ -28,7 +28,7 @@ var minTime = time.Unix(0, 0)
 
 // Healthcheck determines the state of vault
 func (c *VaultClient) Healthcheck() (string, error) {
-	resp, err := c.client.Sys().Health()
+	resp, err := c.client.Health()
 	if err != nil {
 		return "vault", err
 	}

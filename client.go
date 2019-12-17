@@ -16,39 +16,44 @@ var (
 	ErrVersionInvalid   = errors.New("version failed to convert to number")
 )
 
-// VaultClient Used to read and write secrets from vault
+// VaultClient Used to read and write secrets from vault using a vault API client wrapper.
 type VaultClient struct {
-	client *vaultapi.Client
+	client APIClient
 }
 
 // CreateVaultClient by providing an auth token, vault address and the maximum number of retries for a request
 func CreateVaultClient(token, vaultAddress string, retries int) (*VaultClient, error) {
 	config := vaultapi.Config{Address: vaultAddress, MaxRetries: retries}
-	client, err := vaultapi.NewClient(&config)
-	if err != nil {
-		return nil, err
-	}
-	client.SetToken(token)
-	return &VaultClient{client}, nil
+	return CreateVaultClientWithConfig(&config, token)
 }
 
 // CreateVaultClientTLS is like the CreateVaultClient function but wraps the HTTP client with TLS
 func CreateVaultClientTLS(token, vaultAddress string, retries int, cacert, cert, key string) (*VaultClient, error) {
 	config := vaultapi.Config{Address: vaultAddress, MaxRetries: retries}
 	config.ConfigureTLS(&vaultapi.TLSConfig{CACert: cacert, ClientCert: cert, ClientKey: key})
-	client, err := vaultapi.NewClient(&config)
+	return CreateVaultClientWithConfig(&config, token)
+}
+
+// CreateVaultClientWithConfig creates a VaultClient with provided config and token as inputs
+func CreateVaultClientWithConfig(config *vaultapi.Config, token string) (*VaultClient, error) {
+	client, err := vaultapi.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
-
 	client.SetToken(token)
-	return &VaultClient{client}, nil
+	apiClient := &APIClientImpl{client}
+	return CreateVaultClientWithAPIClient(apiClient), nil
+}
+
+// CreateVaultClientWithAPIClient creates a VaultClient with a provided Vault API client as input
+func CreateVaultClientWithAPIClient(apiClient APIClient) *VaultClient {
+	return &VaultClient{apiClient}
 }
 
 // Read reads a secret from vault. If the token does not have the correct policy this returns an error;
 // if the vault server is not reachable, return all the information stored about the secret.
 func (c *VaultClient) Read(path string) (map[string]interface{}, error) {
-	secret, err := c.client.Logical().Read(path)
+	secret, err := c.client.Read(path)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +80,7 @@ func (c *VaultClient) ReadKey(path, key string) (string, error) {
 // Write writes a secret to vault. Returns an error if the token does not have the correct policy or the
 // vault server is not reachable. Returns nil when the operation was successful.
 func (c *VaultClient) Write(path string, data map[string]interface{}) error {
-	_, err := c.client.Logical().Write(path, data)
+	_, err := c.client.Write(path, data)
 	return err
 }
 
