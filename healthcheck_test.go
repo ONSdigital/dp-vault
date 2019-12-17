@@ -1,7 +1,7 @@
 package vault_test
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -10,6 +10,11 @@ import (
 	"github.com/ONSdigital/dp-vault/mock"
 	vaultapi "github.com/hashicorp/vault/api"
 	. "github.com/smartystreets/goconvey/convey"
+)
+
+// Error definitions for testing
+var (
+	ErrNilRequest = errors.New("nil request created")
 )
 
 var respNotInitialised = &vaultapi.HealthResponse{
@@ -29,7 +34,7 @@ var healthNotInitialised = func() (*vaultapi.HealthResponse, error) {
 }
 
 var healthError = func() (*vaultapi.HealthResponse, error) {
-	return nil, fmt.Errorf("nil request created")
+	return nil, ErrNilRequest
 }
 
 func TestVaultHealthy(t *testing.T) {
@@ -56,7 +61,7 @@ func TestVaultNotInitialised(t *testing.T) {
 		cli := vault.CreateClientWithAPIClient(apiCli)
 
 		Convey("Checker returns a Critical Check struct", func() {
-			_, err := validateCriticalCheck(cli)
+			_, err := validateCriticalCheck(cli, vault.ErrNotInitialised.Error())
 			So(err, ShouldEqual, vault.ErrNotInitialised)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
 		})
@@ -72,7 +77,7 @@ func TestVaultAPIError(t *testing.T) {
 		cli := vault.CreateClientWithAPIClient(apiCli)
 
 		Convey("Checker returns a Critical Check struct", func() {
-			_, err := validateCriticalCheck(cli)
+			_, err := validateCriticalCheck(cli, ErrNilRequest.Error())
 			So(err, ShouldNotBeNil)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
 		})
@@ -87,35 +92,35 @@ func validateSuccessfulCheck(cli *vault.Client) (check *health.Check) {
 	So(check.Name, ShouldEqual, vault.ServiceName)
 	So(check.Status, ShouldEqual, health.StatusOK)
 	So(check.StatusCode, ShouldEqual, 200)
-	So(check.Message, ShouldEqual, vault.StatusDescription[health.StatusOK])
+	So(check.Message, ShouldEqual, vault.MsgHealthy)
 	So(check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
 	So(check.LastSuccess, ShouldHappenOnOrBetween, t0, t1)
 	So(check.LastFailure, ShouldHappenBefore, t0)
 	return check
 }
 
-func validateWarningCheck(cli *vault.Client) (check *health.Check, err error) {
+func validateWarningCheck(cli *vault.Client, expectedMessage string) (check *health.Check, err error) {
 	t0 := time.Now().UTC()
 	check, err = cli.Checker(nil)
 	t1 := time.Now().UTC()
 	So(check.Name, ShouldEqual, vault.ServiceName)
 	So(check.Status, ShouldEqual, health.StatusWarning)
 	So(check.StatusCode, ShouldEqual, 429)
-	So(check.Message, ShouldEqual, vault.StatusDescription[health.StatusWarning])
+	So(check.Message, ShouldEqual, expectedMessage)
 	So(check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
 	So(check.LastSuccess, ShouldHappenBefore, t0)
 	So(check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
 	return check, err
 }
 
-func validateCriticalCheck(cli *vault.Client) (check *health.Check, err error) {
+func validateCriticalCheck(cli *vault.Client, expectedMessage string) (check *health.Check, err error) {
 	t0 := time.Now().UTC()
 	check, err = cli.Checker(nil)
 	t1 := time.Now().UTC()
 	So(check.Name, ShouldEqual, vault.ServiceName)
 	So(check.Status, ShouldEqual, health.StatusCritical)
 	So(check.StatusCode, ShouldEqual, 500)
-	So(check.Message, ShouldEqual, vault.StatusDescription[health.StatusCritical])
+	So(check.Message, ShouldEqual, expectedMessage)
 	So(check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
 	So(check.LastSuccess, ShouldHappenBefore, t0)
 	So(check.LastFailure, ShouldHappenOnOrBetween, t0, t1)

@@ -12,7 +12,7 @@ type APIClient interface {
 	Health() (*vaultapi.HealthResponse, error)
 }
 
-// APIClientImpl - Implementation of the APIClient interface wrapping the real vault client calls to nested clients (e.g Logical or Sys)
+// APIClientImpl - Implementation of the APIClient interface wrapping the real vault API client calls to nested clients (e.g Logical or Sys)
 type APIClientImpl struct {
 	client *vaultapi.Client
 }
