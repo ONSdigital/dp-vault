@@ -45,7 +45,7 @@ func (c *Client) Checker(ctx *context.Context) (*health.Check, error) {
 	return getCheck(ctx, health.StatusOK, MsgHealthy), nil
 }
 
-// getCheck reates a Check structure and populates it according to status and message provided
+// getCheck creates a Check structure and populates it according to status and message provided
 func getCheck(ctx *context.Context, status, message string) *health.Check {
 
 	currentTime := time.Now().UTC()

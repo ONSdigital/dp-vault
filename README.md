@@ -58,7 +58,7 @@ The policy used for this app can be found at `policy.hcl`
 
 ### Health package
 
-The Vault checker function currently uses the Health functionality provided by the underlaying Vault library by hashicorp. Otherwise, if it is not initialized, a CRITICAL Check structure is returned.
+The Vault checker function currently uses the Health functionality provided by the underlying Vault library by hashicorp. Otherwise, if it is not initialized, a CRITICAL Check structure is returned.
 
 Read the [Health Check Specification](https://github.com/ONSdigital/dp/blob/master/standards/HEALTH_CHECK_SPECIFICATION.md) for details.
 
