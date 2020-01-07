@@ -7,13 +7,15 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+const maxRetries = 3
+
 func main() {
 
 	log.Namespace = "vault-example"
 	devAddress := os.Getenv("VAULT_ADDR")
 	token := os.Getenv("VAULT_TOKEN")
 
-	client, err := vault.CreateClient(token, devAddress, 3)
+	client, err := vault.CreateClient(token, devAddress, maxRetries)
 
 	// In production no tokens should be logged
 	logData := log.Data{"address": devAddress, "token": token}

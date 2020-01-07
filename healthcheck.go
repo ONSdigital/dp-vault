@@ -19,7 +19,7 @@ var (
 	ErrNotInitialised = errors.New("vault not initialised")
 )
 
-// minTime : Oldest time for Check structure.
+// minTime is the oldest time for Check structure.
 var minTime = time.Unix(0, 0)
 
 // Healthcheck determines the state of vault
@@ -36,7 +36,7 @@ func (c *Client) Healthcheck() (string, error) {
 	return "", nil
 }
 
-// Checker : Check health of Vault and return it inside a Check structure
+// Checker performs a Vault health check and return it inside a Check structure
 func (c *Client) Checker(ctx *context.Context) (*health.Check, error) {
 	_, err := c.Healthcheck()
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *Client) Checker(ctx *context.Context) (*health.Check, error) {
 	return getCheck(ctx, health.StatusOK, MsgHealthy), nil
 }
 
-// getCheck : Create a Check structure and populate it according to status and message provided
+// getCheck reates a Check structure and populates it according to status and message provided
 func getCheck(ctx *context.Context, status, message string) *health.Check {
 
 	currentTime := time.Now().UTC()

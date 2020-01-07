@@ -1,10 +1,10 @@
-Vault Client
+dp-vault
 ============
 
-## Setting up vault
+### Setting up vault
 Using brew type `brew install vault` or the latest binaries can be downloaded at https://www.vaultproject.io/downloads.html
 
-## Running vault
+### Running vault
 To simplify running vault hashicorp has included a development mode for vault. Here is a list of things to remember when running in this mode;
 * HTTPS is disabled
 * An in-memory store is used (restarting vault will erase all data, including policies)
@@ -29,7 +29,7 @@ Unseal Key: 4oHp2u/l6w2uPiZ/jqOe6EHTN6op6Xj7il9MUZCY7Ic=
 Root Token: cb0a36cf-12c5-6b8c-87c9-63f990661f2e
 ```
 
-## Running the vault client example
+### Running the vault client example
 
 To run the example code, make sure vault is started in development mode (`vault server -dev`). Then using the 
 Makefile run `make debug`
@@ -55,3 +55,13 @@ The root token could be used for the app, but the app will have the permission t
 any operations in vault. This does not allow the policy to be tested when developing the app
 
 The policy used for this app can be found at `policy.hcl`
+
+### Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md) for details.
+
+### License
+
+Copyright © 2020, Office for National Statistics (https://www.ons.gov.uk)
+
+Released under MIT license, see [LICENSE](LICENSE.md) for details.

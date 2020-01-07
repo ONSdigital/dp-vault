@@ -9,6 +9,8 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+const maxRetries = 3
+
 func main() {
 
 	log.Namespace = "vault-example-v2"
@@ -28,7 +30,7 @@ func main() {
 		"val":     val,
 	}
 
-	client, err := vault.CreateClient(token, devAddress, 3)
+	client, err := vault.CreateClient(token, devAddress, maxRetries)
 	if err != nil {
 		log.Event(nil, "failed to connect to vault", logData, log.Error(err))
 		os.Exit(1)

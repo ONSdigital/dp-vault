@@ -4,7 +4,7 @@ import vaultapi "github.com/hashicorp/vault/api"
 
 //go:generate moq -out ./mock/api-client.go -pkg mock . APIClient
 
-// APIClient - interface to wrap Vault API Client, which is used by the dp-vault Client in order to interact with Vault, and can be easily mocked for testing
+// APIClient is an interface to wrap Vault API Client, which is used by the dp-vault Client in order to interact with Vault, and can be easily mocked for testing
 type APIClient interface {
 	SetToken(v string)
 	Read(path string) (*vaultapi.Secret, error)
@@ -12,7 +12,7 @@ type APIClient interface {
 	Health() (*vaultapi.HealthResponse, error)
 }
 
-// APIClientImpl - Implementation of the APIClient interface wrapping the real vault API client calls to nested clients (e.g Logical or Sys)
+// APIClientImpl implements the APIClient interface wrapping the real vault API client calls to nested clients (e.g Logical or Sys)
 type APIClientImpl struct {
 	client *vaultapi.Client
 }

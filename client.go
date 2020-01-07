@@ -134,7 +134,7 @@ func (c *Client) VReadKey(path, key string) (string, int64, error) {
 	return val.(string), ver, nil
 }
 
-// VWriteKey - create a data map, with a data field containing the key-value, and write it to vault
+// VWriteKey creates a data map, with a data field containing the key-value, and writes it to vault
 func (c *Client) VWriteKey(path, key, value string) error {
 	data := map[string]interface{}{
 		"data": map[string]interface{}{
