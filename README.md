@@ -56,6 +56,35 @@ any operations in vault. This does not allow the policy to be tested when develo
 
 The policy used for this app can be found at `policy.hcl`
 
+### Health package
+
+The Vault checker function currently uses the Health functionality provided by the underlaying Vault library by hashicorp. Otherwise, if it is not initialized, a CRITICAL Check structure is returned.
+
+Read the [Health Check Specification](https://github.com/ONSdigital/dp/blob/master/standards/HEALTH_CHECK_SPECIFICATION.md) for details.
+
+After running vault as described above, instantiate a vault client:
+```
+import "github.com/ONSdigital/dp-vault/vault"
+
+...
+    vaultcli := vault.CreateClient(<token>, <vaultAddress>, <retries>)
+...
+```
+
+Call the checker with `vaultcli.Checker(context.Background())` and this will return a check object:
+
+```
+{
+    "name": "string",
+    "status": "string",
+    "message": "string",
+    "status_code": "int",
+    "last_checked": "ISO8601 - UTC date time",
+    "last_success": "ISO8601 - UTC date time",
+    "last_failure": "ISO8601 - UTC date time"
+}
+```
+
 ### Contributing
 
 See [CONTRIBUTING](CONTRIBUTING.md) for details.
