@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	vaultapi "github.com/hashicorp/vault/api"
 )
 
@@ -19,6 +20,7 @@ var (
 // Client Used to read and write secrets from vault using a vault API client wrapper.
 type Client struct {
 	client APIClient
+	Check  *health.Check
 }
 
 // CreateClient by providing an auth token, vault address and the maximum number of retries for a request
@@ -47,7 +49,15 @@ func CreateClientWithConfig(config *vaultapi.Config, token string) (*Client, err
 
 // CreateClientWithAPIClient creates a Client with a provided Vault API client as input
 func CreateClientWithAPIClient(apiClient APIClient) *Client {
-	return &Client{apiClient}
+
+	// Initial Check struct
+	check := &health.Check{Name: ServiceName}
+
+	// Create Vault with apiClient and check
+	return &Client{
+		client: apiClient,
+		Check:  check,
+	}
 }
 
 // Read reads a secret from vault. If the token does not have the correct policy this returns an error;

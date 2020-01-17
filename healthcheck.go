@@ -39,38 +39,16 @@ func (c *Client) Healthcheck() (string, error) {
 // Checker performs a Vault health check and return it inside a Check structure
 func (c *Client) Checker(ctx *context.Context) (*health.Check, error) {
 	_, err := c.Healthcheck()
-	if err != nil {
-		return getCheck(ctx, health.StatusCritical, err.Error()), err
-	}
-	return getCheck(ctx, health.StatusOK, MsgHealthy), nil
-}
-
-// getCheck creates a Check structure and populates it according to status and message provided
-func getCheck(ctx *context.Context, status, message string) *health.Check {
-
 	currentTime := time.Now().UTC()
-
-	check := &health.Check{
-		Name:        ServiceName,
-		Status:      status,
-		Message:     message,
-		LastChecked: currentTime,
-		LastSuccess: minTime,
-		LastFailure: minTime,
+	c.Check.LastChecked = &currentTime
+	if err != nil {
+		c.Check.LastFailure = &currentTime
+		c.Check.Status = health.StatusCritical
+		c.Check.Message = err.Error()
+		return c.Check, err
 	}
-
-	switch status {
-	case health.StatusOK:
-		check.StatusCode = 200
-		check.LastSuccess = currentTime
-	case health.StatusWarning:
-		check.StatusCode = 429
-		check.LastFailure = currentTime
-	default:
-		check.StatusCode = 500
-		check.Status = health.StatusCritical
-		check.LastFailure = currentTime
-	}
-
-	return check
+	c.Check.LastSuccess = &currentTime
+	c.Check.Status = health.StatusOK
+	c.Check.Message = MsgHealthy
+	return c.Check, nil
 }

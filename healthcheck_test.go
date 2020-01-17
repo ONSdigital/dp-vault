@@ -12,6 +12,22 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+// initial check that should be created by client constructor
+var expectedInitialCheck = &health.Check{
+	Name: vault.ServiceName,
+}
+
+// create a successful check without lastFailed value
+func createSuccessfulCheck(t time.Time, msg string) health.Check {
+	return health.Check{
+		Name:        vault.ServiceName,
+		LastSuccess: &t,
+		LastChecked: &t,
+		Status:      health.StatusOK,
+		Message:     msg,
+	}
+}
+
 // Error definitions for testing
 var (
 	ErrNilRequest = errors.New("nil request created")
@@ -44,9 +60,11 @@ func TestVaultHealthy(t *testing.T) {
 			HealthFunc: healthSuccess,
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
+		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
 		Convey("Checker returns a successful Check struct", func() {
 			validateSuccessfulCheck(cli)
+			So(cli.Check.LastFailure, ShouldBeNil)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
 		})
 	})
@@ -59,10 +77,12 @@ func TestVaultNotInitialised(t *testing.T) {
 			HealthFunc: healthNotInitialised,
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
+		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
 		Convey("Checker returns a Critical Check struct", func() {
 			_, err := validateCriticalCheck(cli, vault.ErrNotInitialised.Error())
 			So(err, ShouldEqual, vault.ErrNotInitialised)
+			So(cli.Check.LastSuccess, ShouldBeNil)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
 		})
 	})
@@ -75,10 +95,12 @@ func TestVaultAPIError(t *testing.T) {
 			HealthFunc: healthError,
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
+		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
 		Convey("Checker returns a Critical Check struct", func() {
 			_, err := validateCriticalCheck(cli, ErrNilRequest.Error())
-			So(err, ShouldNotBeNil)
+			So(err, ShouldResemble, ErrNilRequest)
+			So(cli.Check.LastSuccess, ShouldBeNil)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
 		})
 	})
@@ -91,11 +113,9 @@ func validateSuccessfulCheck(cli *vault.Client) (check *health.Check) {
 	So(err, ShouldBeNil)
 	So(check.Name, ShouldEqual, vault.ServiceName)
 	So(check.Status, ShouldEqual, health.StatusOK)
-	So(check.StatusCode, ShouldEqual, 200)
 	So(check.Message, ShouldEqual, vault.MsgHealthy)
-	So(check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
-	So(check.LastSuccess, ShouldHappenOnOrBetween, t0, t1)
-	So(check.LastFailure, ShouldHappenBefore, t0)
+	So(*check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
+	So(*check.LastSuccess, ShouldHappenOnOrBetween, t0, t1)
 	return check
 }
 
@@ -105,11 +125,9 @@ func validateWarningCheck(cli *vault.Client, expectedMessage string) (check *hea
 	t1 := time.Now().UTC()
 	So(check.Name, ShouldEqual, vault.ServiceName)
 	So(check.Status, ShouldEqual, health.StatusWarning)
-	So(check.StatusCode, ShouldEqual, 429)
 	So(check.Message, ShouldEqual, expectedMessage)
-	So(check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
-	So(check.LastSuccess, ShouldHappenBefore, t0)
-	So(check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
+	So(*check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
+	So(*check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
 	return check, err
 }
 
@@ -119,10 +137,8 @@ func validateCriticalCheck(cli *vault.Client, expectedMessage string) (check *he
 	t1 := time.Now().UTC()
 	So(check.Name, ShouldEqual, vault.ServiceName)
 	So(check.Status, ShouldEqual, health.StatusCritical)
-	So(check.StatusCode, ShouldEqual, 500)
 	So(check.Message, ShouldEqual, expectedMessage)
-	So(check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
-	So(check.LastSuccess, ShouldHappenBefore, t0)
-	So(check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
+	So(*check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
+	So(*check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
 	return check, err
 }
