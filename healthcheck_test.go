@@ -106,6 +106,28 @@ func TestVaultAPIError(t *testing.T) {
 	})
 }
 
+func TestCheckerHistory(t *testing.T) {
+
+	Convey("Given that we have an vault client with previous successful check, but vault API health returns an error", t, func() {
+
+		var apiCli = &mock.APIClientMock{
+			HealthFunc: healthError,
+		}
+		cli := vault.CreateClientWithAPIClient(apiCli)
+		So(cli.Check, ShouldResemble, expectedInitialCheck)
+
+		lastCheckTime := time.Now().UTC().Add(1 * time.Minute)
+		previousCheck := createSuccessfulCheck(lastCheckTime, vault.MsgHealthy)
+		cli.Check = &previousCheck
+
+		Convey("A new healthcheck keeps the non-overwritten values", func() {
+			_, err := validateCriticalCheck(cli, ErrNilRequest.Error())
+			So(err, ShouldResemble, ErrNilRequest)
+			So(cli.Check.LastSuccess, ShouldResemble, &lastCheckTime)
+		})
+	})
+}
+
 func validateSuccessfulCheck(cli *vault.Client) (check *health.Check) {
 	t0 := time.Now().UTC()
 	check, err := cli.Checker(nil)
