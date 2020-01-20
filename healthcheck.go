@@ -37,7 +37,7 @@ func (c *Client) Healthcheck() (string, error) {
 }
 
 // Checker performs a Vault health check and return it inside a Check structure
-func (c *Client) Checker(ctx *context.Context) (*health.Check, error) {
+func (c *Client) Checker(ctx context.Context) (*health.Check, error) {
 	_, err := c.Healthcheck()
 	currentTime := time.Now().UTC()
 	c.Check.LastChecked = &currentTime
