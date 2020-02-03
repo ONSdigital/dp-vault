@@ -1,9 +1,9 @@
 package vault_test
 
 import (
+	"context"
 	"errors"
 	"testing"
-	"time"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	vault "github.com/ONSdigital/dp-vault"
@@ -11,22 +11,6 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	. "github.com/smartystreets/goconvey/convey"
 )
-
-// initial check that should be created by client constructor
-var expectedInitialCheck = &health.Check{
-	Name: vault.ServiceName,
-}
-
-// create a successful check without lastFailed value
-func createSuccessfulCheck(t time.Time, msg string) health.Check {
-	return health.Check{
-		Name:        vault.ServiceName,
-		LastSuccess: &t,
-		LastChecked: &t,
-		Status:      health.StatusOK,
-		Message:     msg,
-	}
-}
 
 // Error definitions for testing
 var (
@@ -60,30 +44,49 @@ func TestVaultHealthy(t *testing.T) {
 			HealthFunc: healthSuccess,
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
-		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
-		Convey("Checker returns a successful Check struct", func() {
-			validateSuccessfulCheck(cli)
-			So(cli.Check.LastFailure, ShouldBeNil)
+		// mock CheckState for test validation
+		mockCheckState := mock.CheckStateMock{
+			UpdateFunc: func(status, message string, statusCode int) error {
+				return nil
+			},
+		}
+
+		Convey("Checker updates the CheckState to a successful state", func() {
+			cli.Checker(context.Background(), &mockCheckState)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
+			updateCalls := mockCheckState.UpdateCalls()
+			So(len(updateCalls), ShouldEqual, 1)
+			So(updateCalls[0].Status, ShouldEqual, health.StatusOK)
+			So(updateCalls[0].Message, ShouldEqual, vault.MsgHealthy)
+			So(updateCalls[0].StatusCode, ShouldEqual, 0)
 		})
 	})
 }
 
 func TestVaultNotInitialised(t *testing.T) {
-	Convey("Given that Vault has not been initilised", t, func() {
+	Convey("Given that Vault has not been initialised", t, func() {
 
 		var apiCli = &mock.APIClientMock{
 			HealthFunc: healthNotInitialised,
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
-		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
-		Convey("Checker returns a Critical Check struct", func() {
-			_, err := validateCriticalCheck(cli, vault.ErrNotInitialised.Error())
-			So(err, ShouldEqual, vault.ErrNotInitialised)
-			So(cli.Check.LastSuccess, ShouldBeNil)
+		// mock CheckState for test validation
+		mockCheckState := mock.CheckStateMock{
+			UpdateFunc: func(status, message string, statusCode int) error {
+				return nil
+			},
+		}
+
+		Convey("Checker updates the CheckState to a Critical state with the relevant error message", func() {
+			cli.Checker(context.Background(), &mockCheckState)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
+			updateCalls := mockCheckState.UpdateCalls()
+			So(len(updateCalls), ShouldEqual, 1)
+			So(updateCalls[0].Status, ShouldEqual, health.StatusCritical)
+			So(updateCalls[0].Message, ShouldEqual, vault.ErrNotInitialised.Error())
+			So(updateCalls[0].StatusCode, ShouldEqual, 0)
 		})
 	})
 }
@@ -95,72 +98,22 @@ func TestVaultAPIError(t *testing.T) {
 			HealthFunc: healthError,
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
-		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
-		Convey("Checker returns a Critical Check struct", func() {
-			_, err := validateCriticalCheck(cli, ErrNilRequest.Error())
-			So(err, ShouldResemble, ErrNilRequest)
-			So(cli.Check.LastSuccess, ShouldBeNil)
-			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
-		})
-	})
-}
-
-func TestCheckerHistory(t *testing.T) {
-
-	Convey("Given that we have an vault client with previous successful check, but vault API health returns an error", t, func() {
-
-		var apiCli = &mock.APIClientMock{
-			HealthFunc: healthError,
+		// mock CheckState for test validation
+		mockCheckState := mock.CheckStateMock{
+			UpdateFunc: func(status, message string, statusCode int) error {
+				return nil
+			},
 		}
-		cli := vault.CreateClientWithAPIClient(apiCli)
-		So(cli.Check, ShouldResemble, expectedInitialCheck)
 
-		lastCheckTime := time.Now().UTC().Add(1 * time.Minute)
-		previousCheck := createSuccessfulCheck(lastCheckTime, vault.MsgHealthy)
-		cli.Check = &previousCheck
-
-		Convey("A new healthcheck keeps the non-overwritten values", func() {
-			_, err := validateCriticalCheck(cli, ErrNilRequest.Error())
-			So(err, ShouldResemble, ErrNilRequest)
-			So(cli.Check.LastSuccess, ShouldResemble, &lastCheckTime)
+		Convey("Checker updates the CheckState to a Critical state with the relevant error message", func() {
+			cli.Checker(context.Background(), &mockCheckState)
+			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
+			updateCalls := mockCheckState.UpdateCalls()
+			So(len(updateCalls), ShouldEqual, 1)
+			So(updateCalls[0].Status, ShouldEqual, health.StatusCritical)
+			So(updateCalls[0].Message, ShouldEqual, ErrNilRequest.Error())
+			So(updateCalls[0].StatusCode, ShouldEqual, 0)
 		})
 	})
-}
-
-func validateSuccessfulCheck(cli *vault.Client) (check *health.Check) {
-	t0 := time.Now().UTC()
-	check, err := cli.Checker(nil)
-	t1 := time.Now().UTC()
-	So(err, ShouldBeNil)
-	So(check.Name, ShouldEqual, vault.ServiceName)
-	So(check.Status, ShouldEqual, health.StatusOK)
-	So(check.Message, ShouldEqual, vault.MsgHealthy)
-	So(*check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
-	So(*check.LastSuccess, ShouldHappenOnOrBetween, t0, t1)
-	return check
-}
-
-func validateWarningCheck(cli *vault.Client, expectedMessage string) (check *health.Check, err error) {
-	t0 := time.Now().UTC()
-	check, err = cli.Checker(nil)
-	t1 := time.Now().UTC()
-	So(check.Name, ShouldEqual, vault.ServiceName)
-	So(check.Status, ShouldEqual, health.StatusWarning)
-	So(check.Message, ShouldEqual, expectedMessage)
-	So(*check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
-	So(*check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
-	return check, err
-}
-
-func validateCriticalCheck(cli *vault.Client, expectedMessage string) (check *health.Check, err error) {
-	t0 := time.Now().UTC()
-	check, err = cli.Checker(nil)
-	t1 := time.Now().UTC()
-	So(check.Name, ShouldEqual, vault.ServiceName)
-	So(check.Status, ShouldEqual, health.StatusCritical)
-	So(check.Message, ShouldEqual, expectedMessage)
-	So(*check.LastChecked, ShouldHappenOnOrBetween, t0, t1)
-	So(*check.LastFailure, ShouldHappenOnOrBetween, t0, t1)
-	return check, err
 }

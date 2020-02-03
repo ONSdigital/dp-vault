@@ -8,6 +8,13 @@ import (
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
+//go:generate moq -out ./mock/check_state.go -pkg mock . CheckState
+
+// CheckState interface corresponds to the healthcheck CheckState structure
+type CheckState interface {
+	Update(status, message string, statusCode int) error
+}
+
 // ServiceName vault
 const ServiceName = "vault"
 
@@ -36,19 +43,13 @@ func (c *Client) Healthcheck() (string, error) {
 	return "", nil
 }
 
-// Checker performs a Vault health check and return it inside a Check structure
-func (c *Client) Checker(ctx context.Context) (*health.Check, error) {
+// Checker performs a check health of Vault and updates the provided CheckState accordingly
+func (c *Client) Checker(ctx context.Context, state CheckState) error {
 	_, err := c.Healthcheck()
-	currentTime := time.Now().UTC()
-	c.Check.LastChecked = &currentTime
 	if err != nil {
-		c.Check.LastFailure = &currentTime
-		c.Check.Status = health.StatusCritical
-		c.Check.Message = err.Error()
-		return c.Check, err
+		state.Update(health.StatusCritical, err.Error(), 0)
+		return nil
 	}
-	c.Check.LastSuccess = &currentTime
-	c.Check.Status = health.StatusOK
-	c.Check.Message = MsgHealthy
-	return c.Check, nil
+	state.Update(health.StatusOK, MsgHealthy, 0)
+	return nil
 }
