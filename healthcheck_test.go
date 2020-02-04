@@ -45,21 +45,15 @@ func TestVaultHealthy(t *testing.T) {
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
 
-		// mock CheckState for test validation
-		mockCheckState := mock.CheckStateMock{
-			UpdateFunc: func(status, message string, statusCode int) error {
-				return nil
-			},
-		}
+		// CheckState for test validation
+		checkState := health.NewCheckState(vault.ServiceName)
 
 		Convey("Checker updates the CheckState to a successful state", func() {
-			cli.Checker(context.Background(), &mockCheckState)
+			cli.Checker(context.Background(), checkState)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
-			updateCalls := mockCheckState.UpdateCalls()
-			So(len(updateCalls), ShouldEqual, 1)
-			So(updateCalls[0].Status, ShouldEqual, health.StatusOK)
-			So(updateCalls[0].Message, ShouldEqual, vault.MsgHealthy)
-			So(updateCalls[0].StatusCode, ShouldEqual, 0)
+			So(checkState.Status(), ShouldEqual, health.StatusOK)
+			So(checkState.Message(), ShouldEqual, vault.MsgHealthy)
+			So(checkState.StatusCode(), ShouldEqual, 0)
 		})
 	})
 }
@@ -72,21 +66,15 @@ func TestVaultNotInitialised(t *testing.T) {
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
 
-		// mock CheckState for test validation
-		mockCheckState := mock.CheckStateMock{
-			UpdateFunc: func(status, message string, statusCode int) error {
-				return nil
-			},
-		}
+		// CheckState for test validation
+		checkState := health.NewCheckState(vault.ServiceName)
 
 		Convey("Checker updates the CheckState to a Critical state with the relevant error message", func() {
-			cli.Checker(context.Background(), &mockCheckState)
+			cli.Checker(context.Background(), checkState)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
-			updateCalls := mockCheckState.UpdateCalls()
-			So(len(updateCalls), ShouldEqual, 1)
-			So(updateCalls[0].Status, ShouldEqual, health.StatusCritical)
-			So(updateCalls[0].Message, ShouldEqual, vault.ErrNotInitialised.Error())
-			So(updateCalls[0].StatusCode, ShouldEqual, 0)
+			So(checkState.Status(), ShouldEqual, health.StatusCritical)
+			So(checkState.Message(), ShouldEqual, vault.ErrNotInitialised.Error())
+			So(checkState.StatusCode(), ShouldEqual, 0)
 		})
 	})
 }
@@ -99,21 +87,15 @@ func TestVaultAPIError(t *testing.T) {
 		}
 		cli := vault.CreateClientWithAPIClient(apiCli)
 
-		// mock CheckState for test validation
-		mockCheckState := mock.CheckStateMock{
-			UpdateFunc: func(status, message string, statusCode int) error {
-				return nil
-			},
-		}
+		// CheckState for test validation
+		checkState := health.NewCheckState(vault.ServiceName)
 
 		Convey("Checker updates the CheckState to a Critical state with the relevant error message", func() {
-			cli.Checker(context.Background(), &mockCheckState)
+			cli.Checker(context.Background(), checkState)
 			So(len(apiCli.HealthCalls()), ShouldEqual, 1)
-			updateCalls := mockCheckState.UpdateCalls()
-			So(len(updateCalls), ShouldEqual, 1)
-			So(updateCalls[0].Status, ShouldEqual, health.StatusCritical)
-			So(updateCalls[0].Message, ShouldEqual, ErrNilRequest.Error())
-			So(updateCalls[0].StatusCode, ShouldEqual, 0)
+			So(checkState.Status(), ShouldEqual, health.StatusCritical)
+			So(checkState.Message(), ShouldEqual, ErrNilRequest.Error())
+			So(checkState.StatusCode(), ShouldEqual, 0)
 		})
 	})
 }
