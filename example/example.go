@@ -19,23 +19,23 @@ func main() {
 
 	// In production no tokens should be logged
 	logData := log.Data{"address": devAddress, "token": token}
-	log.Event(nil, "Created vault client", logData)
+	log.Event(nil, "Created vault client", log.INFO, logData)
 
 	if err != nil {
-		log.Event(nil, "failed to connect to vault", logData, log.Error(err))
+		log.Event(nil, "failed to connect to vault", log.ERROR, logData, log.Error(err))
 	}
 
 	err = client.WriteKey("secret/shared/datasets/CPIH-0000", "PK-Key", "098980474948463874535354")
 
 	if err != nil {
-		log.Event(nil, "failed to write to vault", logData, log.Error(err))
+		log.Event(nil, "failed to write to vault", log.ERROR, logData, log.Error(err))
 	}
 
 	PKKey, err := client.ReadKey("secret/shared/datasets/CPIH-0000", "PK-Key")
 
 	if err != nil {
-		log.Event(nil, "failed to read  PK Key from vault", logData, log.Error(err))
+		log.Event(nil, "failed to read  PK Key from vault", log.ERROR, logData, log.Error(err))
 	}
 	logData["pk-key"] = PKKey
-	log.Event(nil, "successfully  written and read a key from vault", logData)
+	log.Event(nil, "successfully  written and read a key from vault", log.INFO, logData)
 }

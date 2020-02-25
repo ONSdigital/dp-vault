@@ -32,23 +32,23 @@ func main() {
 
 	client, err := vault.CreateClient(token, devAddress, maxRetries)
 	if err != nil {
-		log.Event(nil, "failed to connect to vault", logData, log.Error(err))
+		log.Event(nil, "failed to connect to vault", log.FATAL, logData, log.Error(err))
 		os.Exit(1)
 	}
 
-	log.Event(nil, "Created vault client", logData)
+	log.Event(nil, "Created vault client", log.INFO, logData)
 
 	if err = client.VWriteKey(path, key, val); err != nil {
-		log.Event(nil, "failed to write to vault", logData, log.Error(err))
+		log.Event(nil, "failed to write to vault", log.FATAL, logData, log.Error(err))
 		os.Exit(1)
 	}
 
 	readVal, ver, err := client.VReadKey(path, key)
 	if err != nil {
 		if err == vault.ErrKeyNotFound {
-			log.Event(nil, "key not in vault", logData, log.Error(err))
+			log.Event(nil, "key not in vault", log.ERROR, logData, log.Error(err))
 		} else {
-			log.Event(nil, "failed to read PK-Key from vault", logData, log.Error(err))
+			log.Event(nil, "failed to read PK-Key from vault", log.ERROR, logData, log.Error(err))
 		}
 		os.Exit(1)
 	}
@@ -58,9 +58,9 @@ func main() {
 
 	if readVal != val {
 		err = errors.New("read value differs from expected")
-		log.Event(nil, "", logData, log.Error(err))
+		log.Event(nil, "", log.FATAL, logData, log.Error(err))
 		os.Exit(1)
 	}
 
-	log.Event(nil, "successfully written and read from vault", logData)
+	log.Event(nil, "successfully written and read from vault", log.INFO, logData)
 }
