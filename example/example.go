@@ -4,7 +4,7 @@ import (
 	"os"
 
 	vault "github.com/ONSdigital/dp-vault"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const maxRetries = 3
@@ -19,23 +19,23 @@ func main() {
 
 	// In production no tokens should be logged
 	logData := log.Data{"address": devAddress, "token": token}
-	log.Event(nil, "Created vault client", log.INFO, logData)
+	log.Info(nil, "Created vault client", logData)
 
 	if err != nil {
-		log.Event(nil, "failed to connect to vault", log.ERROR, logData, log.Error(err))
+		log.Error(nil, "failed to connect to vault", err, logData)
 	}
 
 	err = client.WriteKey("secret/shared/datasets/CPIH-0000", "PK-Key", "098980474948463874535354")
 
 	if err != nil {
-		log.Event(nil, "failed to write to vault", log.ERROR, logData, log.Error(err))
+		log.Error(nil, "failed to write to vault", err, logData)
 	}
 
 	PKKey, err := client.ReadKey("secret/shared/datasets/CPIH-0000", "PK-Key")
 
 	if err != nil {
-		log.Event(nil, "failed to read  PK Key from vault", log.ERROR, logData, log.Error(err))
+		log.Error(nil, "failed to read  PK Key from vault", err, logData)
 	}
 	logData["pk-key"] = PKKey
-	log.Event(nil, "successfully  written and read a key from vault", log.INFO, logData)
+	log.Info(nil, "successfully  written and read a key from vault", logData)
 }

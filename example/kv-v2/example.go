@@ -6,7 +6,7 @@ import (
 	"time"
 
 	vault "github.com/ONSdigital/dp-vault"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const maxRetries = 3
@@ -32,23 +32,23 @@ func main() {
 
 	client, err := vault.CreateClient(token, devAddress, maxRetries)
 	if err != nil {
-		log.Event(nil, "failed to connect to vault", log.FATAL, logData, log.Error(err))
+		log.Fatal(nil, "failed to connect to vault", err, logData)
 		os.Exit(1)
 	}
 
-	log.Event(nil, "Created vault client", log.INFO, logData)
+	log.Info(nil, "Created vault client", logData)
 
 	if err = client.VWriteKey(path, key, val); err != nil {
-		log.Event(nil, "failed to write to vault", log.FATAL, logData, log.Error(err))
+		log.Fatal(nil, "failed to write to vault", err, logData)
 		os.Exit(1)
 	}
 
 	readVal, ver, err := client.VReadKey(path, key)
 	if err != nil {
 		if err == vault.ErrKeyNotFound {
-			log.Event(nil, "key not in vault", log.ERROR, logData, log.Error(err))
+			log.Error(nil, "key not in vault", err, logData)
 		} else {
-			log.Event(nil, "failed to read PK-Key from vault", log.ERROR, logData, log.Error(err))
+			log.Error(nil, "failed to read PK-Key from vault", err, logData)
 		}
 		os.Exit(1)
 	}
@@ -58,9 +58,9 @@ func main() {
 
 	if readVal != val {
 		err = errors.New("read value differs from expected")
-		log.Event(nil, "", log.FATAL, logData, log.Error(err))
+		log.Fatal(nil, "", err, logData)
 		os.Exit(1)
 	}
 
-	log.Event(nil, "successfully written and read from vault", log.INFO, logData)
+	log.Info(nil, "successfully written and read from vault", logData)
 }
