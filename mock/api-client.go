@@ -4,7 +4,7 @@
 package mock
 
 import (
-	"github.com/ONSdigital/dp-vault"
+	"github.com/ONSdigital/dp-vault/v2"
 	"github.com/hashicorp/vault/api"
 	"sync"
 )

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	vault "github.com/ONSdigital/dp-vault"
-	"github.com/ONSdigital/dp-vault/mock"
+	health "github.com/ONSdigital/dp-healthcheck/v2/healthcheck"
+	vault "github.com/ONSdigital/dp-vault/v2"
+	"github.com/ONSdigital/dp-vault/v2/mock"
 	vaultapi "github.com/hashicorp/vault/api"
 	. "github.com/smartystreets/goconvey/convey"
 )

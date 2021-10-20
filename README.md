@@ -64,7 +64,7 @@ Read the [Health Check Specification](https://github.com/ONSdigital/dp/blob/mast
 
 After running vault as described above, instantiate a vault client:
 ```
-import "github.com/ONSdigital/dp-vault/vault"
+import "github.com/ONSdigital/dp-vault/v2/vault"
 
 ...
     vaultcli := vault.CreateClient(<token>, <vaultAddress>, <retries>)

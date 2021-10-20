@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	vault "github.com/ONSdigital/dp-vault"
+	vault "github.com/ONSdigital/dp-vault/v2"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
