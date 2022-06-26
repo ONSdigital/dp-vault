@@ -1,11 +1,73 @@
 module github.com/ONSdigital/dp-vault
 
-go 1.13
+go 1.18
+
+replace (
+	// solves sonatype-2020-1055 CWE-90: Improper Neutralization of Special Elements used in an LDAP Query ('LDAP Injection')
+	github.com/go-ldap/ldap/v3 => github.com/go-ldap/ldap/v3 v3.4.2
+	// solves CVE-2021-3121
+	github.com/prometheus/common => github.com/prometheus/common v0.34.0
+	// solves sonatype-2020-0584 CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') github.com/yuin/goldmark - Cross-Site Scripting (XSS)
+	github.com/yuin/goldmark => github.com/yuin/goldmark v1.4.12
+)
 
 require (
-	github.com/ONSdigital/dp-healthcheck v1.0.5
-	github.com/ONSdigital/log.go/v2 v2.0.5
-	github.com/hashicorp/vault/api v1.0.5-0.20200527182800-ad90e0b39d2f
-	github.com/smartystreets/goconvey v1.6.4
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
+	github.com/ONSdigital/dp-healthcheck v1.4.0-beta
+	github.com/ONSdigital/log.go/v2 v2.3.0-beta
+	github.com/hashicorp/vault/api v1.7.2
+	github.com/smartystreets/goconvey v1.7.2
+)
+
+require (
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.150.0-beta // indirect
+	github.com/ONSdigital/dp-net/v2 v2.5.0-beta // indirect
+	github.com/armon/go-metrics v0.4.0 // indirect
+	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
+	github.com/fatih/color v1.13.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/gopherjs/gopherjs v1.17.2 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-hclog v1.2.1 // indirect
+	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-plugin v1.4.4 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
+	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
+	github.com/hashicorp/go-secure-stdlib/mlock v0.1.2 // indirect
+	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.6 // indirect
+	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
+	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
+	github.com/hashicorp/go-uuid v1.0.3 // indirect
+	github.com/hashicorp/go-version v1.5.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hashicorp/vault/sdk v0.5.2 // indirect
+	github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87 // indirect
+	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
+	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mitchellh/copystructure v1.2.0 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/oklog/run v1.1.0 // indirect
+	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/smartystreets/assertions v1.13.0 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
+	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
+	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
+	google.golang.org/genproto v0.0.0-20220624142145-8cd45d7dbd1f // indirect
+	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 )
