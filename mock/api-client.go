@@ -5,15 +5,8 @@ package mock
 
 import (
 	"github.com/ONSdigital/dp-vault"
-	"github.com/hashicorp/vault/api"
+	vaultapi "github.com/hashicorp/vault/api"
 	"sync"
-)
-
-var (
-	lockAPIClientMockHealth   sync.RWMutex
-	lockAPIClientMockRead     sync.RWMutex
-	lockAPIClientMockSetToken sync.RWMutex
-	lockAPIClientMockWrite    sync.RWMutex
 )
 
 // Ensure, that APIClientMock does implement vault.APIClient.
@@ -22,40 +15,40 @@ var _ vault.APIClient = &APIClientMock{}
 
 // APIClientMock is a mock implementation of vault.APIClient.
 //
-//     func TestSomethingThatUsesAPIClient(t *testing.T) {
+// 	func TestSomethingThatUsesAPIClient(t *testing.T) {
 //
-//         // make and configure a mocked vault.APIClient
-//         mockedAPIClient := &APIClientMock{
-//             HealthFunc: func() (*api.HealthResponse, error) {
-// 	               panic("mock out the Health method")
-//             },
-//             ReadFunc: func(path string) (*api.Secret, error) {
-// 	               panic("mock out the Read method")
-//             },
-//             SetTokenFunc: func(v string)  {
-// 	               panic("mock out the SetToken method")
-//             },
-//             WriteFunc: func(path string, data map[string]interface{}) (*api.Secret, error) {
-// 	               panic("mock out the Write method")
-//             },
-//         }
+// 		// make and configure a mocked vault.APIClient
+// 		mockedAPIClient := &APIClientMock{
+// 			HealthFunc: func() (*vaultapi.HealthResponse, error) {
+// 				panic("mock out the Health method")
+// 			},
+// 			ReadFunc: func(path string) (*vaultapi.Secret, error) {
+// 				panic("mock out the Read method")
+// 			},
+// 			SetTokenFunc: func(v string)  {
+// 				panic("mock out the SetToken method")
+// 			},
+// 			WriteFunc: func(path string, data map[string]interface{}) (*vaultapi.Secret, error) {
+// 				panic("mock out the Write method")
+// 			},
+// 		}
 //
-//         // use mockedAPIClient in code that requires vault.APIClient
-//         // and then make assertions.
+// 		// use mockedAPIClient in code that requires vault.APIClient
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type APIClientMock struct {
 	// HealthFunc mocks the Health method.
-	HealthFunc func() (*api.HealthResponse, error)
+	HealthFunc func() (*vaultapi.HealthResponse, error)
 
 	// ReadFunc mocks the Read method.
-	ReadFunc func(path string) (*api.Secret, error)
+	ReadFunc func(path string) (*vaultapi.Secret, error)
 
 	// SetTokenFunc mocks the SetToken method.
 	SetTokenFunc func(v string)
 
 	// WriteFunc mocks the Write method.
-	WriteFunc func(path string, data map[string]interface{}) (*api.Secret, error)
+	WriteFunc func(path string, data map[string]interface{}) (*vaultapi.Secret, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -80,18 +73,22 @@ type APIClientMock struct {
 			Data map[string]interface{}
 		}
 	}
+	lockHealth   sync.RWMutex
+	lockRead     sync.RWMutex
+	lockSetToken sync.RWMutex
+	lockWrite    sync.RWMutex
 }
 
 // Health calls HealthFunc.
-func (mock *APIClientMock) Health() (*api.HealthResponse, error) {
+func (mock *APIClientMock) Health() (*vaultapi.HealthResponse, error) {
 	if mock.HealthFunc == nil {
 		panic("APIClientMock.HealthFunc: method is nil but APIClient.Health was just called")
 	}
 	callInfo := struct {
 	}{}
-	lockAPIClientMockHealth.Lock()
+	mock.lockHealth.Lock()
 	mock.calls.Health = append(mock.calls.Health, callInfo)
-	lockAPIClientMockHealth.Unlock()
+	mock.lockHealth.Unlock()
 	return mock.HealthFunc()
 }
 
@@ -102,14 +99,14 @@ func (mock *APIClientMock) HealthCalls() []struct {
 } {
 	var calls []struct {
 	}
-	lockAPIClientMockHealth.RLock()
+	mock.lockHealth.RLock()
 	calls = mock.calls.Health
-	lockAPIClientMockHealth.RUnlock()
+	mock.lockHealth.RUnlock()
 	return calls
 }
 
 // Read calls ReadFunc.
-func (mock *APIClientMock) Read(path string) (*api.Secret, error) {
+func (mock *APIClientMock) Read(path string) (*vaultapi.Secret, error) {
 	if mock.ReadFunc == nil {
 		panic("APIClientMock.ReadFunc: method is nil but APIClient.Read was just called")
 	}
@@ -118,9 +115,9 @@ func (mock *APIClientMock) Read(path string) (*api.Secret, error) {
 	}{
 		Path: path,
 	}
-	lockAPIClientMockRead.Lock()
+	mock.lockRead.Lock()
 	mock.calls.Read = append(mock.calls.Read, callInfo)
-	lockAPIClientMockRead.Unlock()
+	mock.lockRead.Unlock()
 	return mock.ReadFunc(path)
 }
 
@@ -133,9 +130,9 @@ func (mock *APIClientMock) ReadCalls() []struct {
 	var calls []struct {
 		Path string
 	}
-	lockAPIClientMockRead.RLock()
+	mock.lockRead.RLock()
 	calls = mock.calls.Read
-	lockAPIClientMockRead.RUnlock()
+	mock.lockRead.RUnlock()
 	return calls
 }
 
@@ -149,9 +146,9 @@ func (mock *APIClientMock) SetToken(v string) {
 	}{
 		V: v,
 	}
-	lockAPIClientMockSetToken.Lock()
+	mock.lockSetToken.Lock()
 	mock.calls.SetToken = append(mock.calls.SetToken, callInfo)
-	lockAPIClientMockSetToken.Unlock()
+	mock.lockSetToken.Unlock()
 	mock.SetTokenFunc(v)
 }
 
@@ -164,14 +161,14 @@ func (mock *APIClientMock) SetTokenCalls() []struct {
 	var calls []struct {
 		V string
 	}
-	lockAPIClientMockSetToken.RLock()
+	mock.lockSetToken.RLock()
 	calls = mock.calls.SetToken
-	lockAPIClientMockSetToken.RUnlock()
+	mock.lockSetToken.RUnlock()
 	return calls
 }
 
 // Write calls WriteFunc.
-func (mock *APIClientMock) Write(path string, data map[string]interface{}) (*api.Secret, error) {
+func (mock *APIClientMock) Write(path string, data map[string]interface{}) (*vaultapi.Secret, error) {
 	if mock.WriteFunc == nil {
 		panic("APIClientMock.WriteFunc: method is nil but APIClient.Write was just called")
 	}
@@ -182,9 +179,9 @@ func (mock *APIClientMock) Write(path string, data map[string]interface{}) (*api
 		Path: path,
 		Data: data,
 	}
-	lockAPIClientMockWrite.Lock()
+	mock.lockWrite.Lock()
 	mock.calls.Write = append(mock.calls.Write, callInfo)
-	lockAPIClientMockWrite.Unlock()
+	mock.lockWrite.Unlock()
 	return mock.WriteFunc(path, data)
 }
 
@@ -199,8 +196,8 @@ func (mock *APIClientMock) WriteCalls() []struct {
 		Path string
 		Data map[string]interface{}
 	}
-	lockAPIClientMockWrite.RLock()
+	mock.lockWrite.RLock()
 	calls = mock.calls.Write
-	lockAPIClientMockWrite.RUnlock()
+	mock.lockWrite.RUnlock()
 	return calls
 }
