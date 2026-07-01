@@ -1,17 +1,17 @@
 SHELL=bash
 
+.PHONY: test
 test:
 	go test -race -cover ./...
-.PHONY: test
 
-audit:
-	set -o pipefail; go list -json -m all | nancy sleuth
 .PHONY: audit
+audit:
+	dis-vulncheck
 
+.PHONY: build
 build:
 	go build ./...
-.PHONY: build
 
+.PHONY: lint
 lint:
 	exit
-.PHONY: lint
